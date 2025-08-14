@@ -3,16 +3,6 @@ const Crypto = require("../models/cryptoModel");
 
 const getTopCryptos = async (req, res) => {
   try {
-    // Get the API key from environment variables
-    const apiKey = process.env.COINGECKO_API_KEY;
-
-    // Check if the key exists
-    if (!apiKey) {
-      console.error("CoinGecko API key is not set!");
-      return res.status(500).json({ error: "API key is missing" });
-    }
-
-    // Fetch top 10 cryptos from CoinGecko using the API key
     const response = await axios.get(
       "https://api.coingecko.com/api/v3/coins/markets",
       {
@@ -21,10 +11,6 @@ const getTopCryptos = async (req, res) => {
           order: "market_cap_desc",
           per_page: 10,
           page: 1,
-        },
-        // Add the API key to the request headers
-        headers: {
-          'x-cg-demo-api-key': apiKey // Use this for the free Demo plan
         }
       }
     );
