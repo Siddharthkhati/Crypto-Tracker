@@ -8,7 +8,7 @@ const Home = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/coins")
+    fetch("https://crypto-tracker-v6je.onrender.com/api/coins")
       .then((res) => {
         if (!res.ok) {
           throw new Error('Network response was not ok');
@@ -29,7 +29,7 @@ const Home = () => {
   const handleCoinClick = async (coinId) => {
         setSelectedCoinId(coinId);
         try {
-            const res = await fetch(`http://localhost:5000/api/history/${coinId}`);
+            const res = await fetch(`https://crypto-tracker-v6je.onrender.com/api/history/${coinId}`);
             if (!res.ok) {
             setCoinHistory([]);
             console.log(`No history found for ${coinId}`);
