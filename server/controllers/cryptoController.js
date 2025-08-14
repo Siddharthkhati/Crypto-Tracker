@@ -3,7 +3,16 @@ const Crypto = require("../models/cryptoModel");
 
 const getTopCryptos = async (req, res) => {
   try {
-    // Fetch top 10 cryptos from CoinGecko
+    // Get the API key from environment variables
+    const apiKey = process.env.COINGECKO_API_KEY;
+
+    // Check if the key exists
+    if (!apiKey) {
+      console.error("CoinGecko API key is not set!");
+      return res.status(500).json({ error: "API key is missing" });
+    }
+
+    // Fetch top 10 cryptos from CoinGecko using the API key
     const response = await axios.get(
       "https://api.coingecko.com/api/v3/coins/markets",
       {
@@ -11,7 +20,11 @@ const getTopCryptos = async (req, res) => {
           vs_currency: "usd",
           order: "market_cap_desc",
           per_page: 10,
-          page: 1
+          page: 1,
+        },
+        // Add the API key to the request headers
+        headers: {
+          'x-cg-demo-api-key': apiKey // Use this for the free Demo plan
         }
       }
     );
@@ -25,17 +38,16 @@ const getTopCryptos = async (req, res) => {
       priceUSD: coin.current_price,
       marketCap: coin.market_cap,
       change24h: coin.price_change_percentage_24h,
-      timestamp: new Date(coin.last_updated)
+      timestamp: new Date(coin.last_updated),
     }));
 
     // Overwrite existing collection
-    // 1. Remove all old documents
     await Crypto.deleteMany({});
-    // 2. Insert new top 10 data
     await Crypto.insertMany(formattedData);
 
     res.status(200).json(formattedData);
   } catch (error) {
+    console.error("Error fetching or saving crypto data:", error.message);
     res.status(500).json({ error: "Failed to fetch or save crypto data" });
   }
 };
