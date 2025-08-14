@@ -15,9 +15,7 @@ const getTopCryptos = async (req, res) => {
       }
     );
 
-    const data = response.data;
-
-    const formattedData = data.map((coin) => ({
+    const formattedData = response.data.map((coin) => ({
       coinId: coin.id,
       name: coin.name,
       symbol: coin.symbol,
@@ -27,13 +25,23 @@ const getTopCryptos = async (req, res) => {
       timestamp: new Date(coin.last_updated),
     }));
 
-    // Overwrite existing collection
     await Crypto.deleteMany({});
     await Crypto.insertMany(formattedData);
 
     res.status(200).json(formattedData);
   } catch (error) {
-    console.error("Error fetching or saving crypto data:", error.message);
+    console.error("Error fetching or saving crypto data:");
+
+    if (error.response) {
+      console.error("Status:", error.response.status);
+      console.error("Headers:", error.response.headers);
+      console.error("Data:", error.response.data);
+    } else if (error.request) {
+      console.error("No response received:", error.request);
+    } else {
+      console.error("Request setup error:", error.message);
+    }
+
     res.status(500).json({ error: "Failed to fetch or save crypto data" });
   }
 };
