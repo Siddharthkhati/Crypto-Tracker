@@ -1,9 +1,24 @@
 const axios = require("axios");
 const Crypto = require("../models/cryptoModel");
 
+// In-memory cache variables
+let lastFetchTime = 0;
+let cachedCryptoData = null;
+// Cache duration in milliseconds (5 minutes)
+const CACHE_DURATION = 5 * 60 * 1000;
+
 const getTopCryptos = async (req, res) => {
   try {
-    console.log("Fetching top cryptos from CoinGecko...");
+    const currentTime = Date.now();
+
+    // Check if cached data exists and is still fresh
+    if (cachedCryptoData && (currentTime - lastFetchTime < CACHE_DURATION)) {
+      console.log("Serving cached data.");
+      return res.status(200).json(cachedCryptoData);
+    }
+
+    // If cache is expired or empty, fetch new data from CoinGecko
+    console.log("Fetching new data from CoinGecko...");
     const response = await axios.get(
       "https://api.coingecko.com/api/v3/coins/markets",
       {
@@ -13,11 +28,9 @@ const getTopCryptos = async (req, res) => {
           per_page: 10,
           page: 1,
         },
-        timeout: 10000, // optional: timeout in ms to avoid hanging requests
       }
     );
 
-    console.log("Data fetched successfully. Formatting data...");
     const formattedData = response.data.map((coin) => ({
       coinId: coin.id,
       name: coin.name,
@@ -25,35 +38,31 @@ const getTopCryptos = async (req, res) => {
       priceUSD: coin.current_price,
       marketCap: coin.market_cap,
       change24h: coin.price_change_percentage_24h,
-      timestamp: new Date(coin.last_updated),
+      timestamp: new Date(),
     }));
 
-    console.log("Clearing old crypto data from DB...");
-    await Crypto.deleteMany({});
+    // Update the in-memory cache and timestamp
+    cachedCryptoData = formattedData;
+    lastFetchTime = currentTime;
 
-    console.log("Inserting new crypto data into DB...");
+    // Delete existing data and insert the new data into the database
+    await Crypto.deleteMany({});
     await Crypto.insertMany(formattedData);
 
-    console.log("Crypto data saved successfully!");
+    // Send the fresh data to the client
     res.status(200).json(formattedData);
   } catch (error) {
     console.error("Error fetching or saving crypto data:");
-
+    
     if (error.response) {
-      // The request was made and the server responded with a status code outside 2xx
       console.error("Status:", error.response.status);
       console.error("Headers:", error.response.headers);
       console.error("Data:", error.response.data);
     } else if (error.request) {
-      // The request was made but no response was received
       console.error("No response received:", error.request);
     } else {
-      // Something happened in setting up the request
       console.error("Request setup error:", error.message);
     }
-
-    // Optional: log the full error object for debugging
-    console.error(error);
 
     res.status(500).json({ error: "Failed to fetch or save crypto data" });
   }
