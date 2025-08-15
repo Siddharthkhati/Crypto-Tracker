@@ -46,6 +46,10 @@ Cryptocurrency markets move fast — this project was created to:
 <summary>Preview</summary>
 
 ![Price History Timeline](.github/images/crypto-coin-price-history-timeline.png)
+![Top 10 Crypto Currency Data](.github/images/top-10-crypto-currency-data.png)
+![Crypto Histories](.github/images/crypto-histories-data.png)
+![Cron Job Code](.github/images/cron-job-code.png).
+
 </details>
 
 ## Technical Stack
