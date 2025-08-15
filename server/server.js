@@ -24,7 +24,6 @@ mongoose
 
 // Cron job: runs every hour at 0 minutes
 cron.schedule("0 * * * *", async () => {
-  console.log("Cron Job: Fetching top 10 cryptocurrencies for history...");
   await saveCryptoHistory(); // append to history
 });
 
